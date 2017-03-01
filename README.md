@@ -8,7 +8,7 @@ In order to run this pipeline, one must either have
 
 2. Saved numpy data: X_train.npy, X_test.npy, y_train.npy, y_test.npy
 
-The variable `load_data = True` will take option 2, otherwise option 1 is taken.  Neither of these is small enough to upload to this repository.  For myself, I used the [Vehicle Data](https://s3.amazonaws.com/udacity-sdc/Vehicle_Tracking/vehicles.zip) and [Non-Vehicle Data](https://s3.amazonaws.com/udacity-sdc/Vehicle_Tracking/non-vehicles.zip) links provided by Udacity.
+If `load_data = True` the pipeline will take option 2, and load the numpy data.  If `load_data == False` the pipeline will take option 1, and save the numpy files to save time later.  Neither of these datasets are small enough to upload to this repository.  For myself, I used the [Vehicle Data](https://s3.amazonaws.com/udacity-sdc/Vehicle_Tracking/vehicles.zip) and [Non-Vehicle Data](https://s3.amazonaws.com/udacity-sdc/Vehicle_Tracking/non-vehicles.zip) links provided by Udacity.
 
 ## Feature Creation ##
 Using the provided image set, there are 8792 images of vehicles (label = 1), and 8968 images of non-vehicles (label = 0).
