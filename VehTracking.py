@@ -188,7 +188,7 @@ class HeatMap():
     def __init__(self, image):
         self.img = np.zeros_like(image)
         self.cool_rate = 25
-        self.threshold = 0
+        self.threshold = 15
 
     def addheat(self, boxlist):
         for idx in range(len(boxlist.list)):
@@ -315,9 +315,8 @@ def make_heat_map_image(image):
             _ = draw_box(image, box, boxlist)
 
     heatmap.addheat(boxlist)
-    #heatmap.thresh()
 
-    return heatmap.img
+    return heatmap.thresh()
 
 #-----------------------------------#
 ### Create feature and label sets ###
@@ -610,7 +609,7 @@ if make_heat_video is True:
     heatmap = HeatMap(image = test_image)
     video_output = 'heatmap_video_out.mp4'
     clip1 = VideoFileClip("project_video.mp4")
-    clip1 = clip1.subclip(18,20)
+    #clip1 = clip1.subclip(18,20)
     video_clip = clip1.fl_image(make_heat_map_image)
     video_clip.write_videofile(video_output, audio=False)
 
