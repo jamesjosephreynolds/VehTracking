@@ -18,6 +18,10 @@ In order to create a feature array for each image, I augmented data arrays of th
 The code below shows how feature extraction is done for a 64x64x3 image.
 
 ```python
+#---------------------------------#
+### Get feature vector function ###
+#---------------------------------#
+
 def get_feature(img, spatial_size = (32, 32), hist_width = 4, n_bins = 32, orient = 12, pix = 8, cells = 2):
     # take in an RGB image
     # extract color histograms
@@ -55,7 +59,7 @@ def get_feature(img, spatial_size = (32, 32), hist_width = 4, n_bins = 32, orien
     spatial_s = np.array(small_s.ravel(),dtype = np.float)
     spatial_s *= feat_max / 255.0
 
-    # normalize data to [-0.5, 0.5]
+    # concatenate and normalize data
     feature = np.concatenate((hog_array, rhist[0], ghist[0], bhist[0], shist[0], spatial_rgb, spatial_s))/feat_max
     feature = feature.astype(np.float)-0.5
 
@@ -183,11 +187,11 @@ class BBox():
         self.start = self.origin
 ```
 
-Then I created a list of `BBox()` instances that I could use to iterate over a single frame.  For all bounding boxes, I began searching at y-coordinate 350.  There will not be any vehicles above this point, as it corresponds to the sky in the images.  For the smallest bounding box, I stopped the search at y-coordinate 550.  Vehicles that are below that coordinate will be close to the camera, and appear much larger than 96x96 pixels.
+Then I created a list of `BBox()` instances that I could use to iterate over a single frame.  For all bounding boxes, I began searching at y-coordinate 350.  There will not be any vehicles above this point, as it corresponds to the sky in the images.  For the smallest bounding box, I stopped the search at y-coordinate 550.  Vehicles that are below that coordinate will be close to the camera, and appear much larger than 96x96 pixels.  For the larger images, I stopped the search at y-coordinate 680 (near the hood).
 
 ```python
-box1 = BBox(size = (196,196), stride = (32, 32), origin = (0,350), stop = 720)
-box2 = BBox(size = (128,128), stride = (24, 24), origin = (0,350), stop = 720)
+box1 = BBox(size = (196,196), stride = (32, 32), origin = (0,350), stop = 680)
+box2 = BBox(size = (128,128), stride = (24, 24), origin = (0,350), stop = 680)
 box3 = BBox(size = (96,96), stride = (16, 16), origin = (0,350), stop = 550)
 
 boxes = [box1, box2, box3]
