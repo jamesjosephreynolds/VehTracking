@@ -273,7 +273,7 @@ for box_label in range(labels[1]):
         cv2.rectangle(image, (x1, y1), (x2, y2), (255,255,0), 6)
 ```
 
-With this in place, my result is the [project_video_out.mp4 video](project_video_out.mp4) here.  One issue that I was not able to resolve is that the white car is seemingly lost as it traverses the bright colored pavement.  This may be due to insufficient training data for the classifier.
+With this in place, my result is the [project_video_out.mp4 video](project_video_out.mp4) here.  One issue that I was not able to resolve is that the white car is seemingly lost as it traverses the bright colored pavement (around 20sec).  This may be due to insufficient training data for the classifier.  I was unable to detect this area well and still robustly reject false positives.  A better classifier (e.g. CNN) may help with this area.
 
 [![Whoops, there should be a picture here!]()]()
 *Final output video with vehicles found*
