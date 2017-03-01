@@ -249,3 +249,5 @@ The video below shows how my heat mapping algorithm performs on the project vide
 
 ## Reflections ##
 The single biggest shortcoming with this pipeline, in my opinion, is the speed.  It takes approximately 50 minutes to process a 50 second video, so it needs to be 60 to 100 times faster.  I didn't extract all HOG data upfront, as this suggestion was posted to the lesson after my code design was underway, and it was not well structured to handle this change.  It would be an extensive tear-up to make the code compatible with this approach.
+
+In the end it is not clear to me why these methods (HOG, histogram, SVM, etc) were introduced after convolutional neural networks.  My intuition is that using a CNN was the classifier here would give much better results.  Based on experience in other projects, a well-constructed CNN will not identify a blank road or barrier as a vehicle.
