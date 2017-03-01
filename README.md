@@ -181,7 +181,7 @@ boxes = [box1, box2, box3]
 
 The resulting scan areas can be seen in the video below.  I chose this frame for my test since it has two cars present.
 
-[![Whoops, there should be a picture here!](https://img.youtube.com/vi/fZdrbdSeQmo/0.jpg)](https://youtu.be/fZdrbdSeQmo)
+[![Whoops, there should be a picture here!](https://img.youtube.com/vi/SUZjjl_zIs4/0.jpg)](https://youtu.be/SUZjjl_zIs4)
 
 ## Heat Mapping ##
 In order to identify and track vehicles within the video, I created `class HeatMap()`, which creates a black image, with bright red spots where there are many bounding boxes identified.  The method `def cool(self)` is used to track the hot spots across multiple frames.  This is beneficial for building confidence in areas that are identified in many consecutive frames, and ignoring temporary false positives.
@@ -223,3 +223,8 @@ class HeatMap():
     def reset(self):
         self.img = 0
 ```
+
+[![Whoops, there should be a picture here!](https://img.youtube.com/vi/AdDrUNGaqvE/0.jpg)](https://youtu.be/AdDrUNGaqvE)
+
+## Reflections ##
+The single biggest shortcoming with this pipeline, in my opinion, is the speed.  It takes approximately 50 minutes to process a 50 second video, so it needs to be 60 to 100 times faster.  I didn't extract all HOG data upfront, as this suggestion was posted to the lesson after my code design was underway, and it was not well structured to handle this change.  It would be an extensive tear-up to make the code compatible with this approach.
