@@ -183,3 +183,41 @@ The resulting scan areas can be seen in the video below.  I chose this frame for
 
 [![Whoops, there should be a picture here!](https://img.youtube.com/vi/fZdrbdSeQmo/0.jpg)](https://youtu.be/fZdrbdSeQmo)
 
+## Heat Mapping ##
+In order to identify and track vehicles within the video, I created `class HeatMap()`, which creates a black image, with bright red spots where there are many bounding boxes identified.  The method `def cool(self)` is used to track the hot spots across multiple frames.  This is beneficial for building confidence in areas that are identified in many consecutive frames, and ignoring temporary false positives.
+
+```python
+class HeatMap():
+    #blank images
+    def __init__(self, image):
+        self.img = np.zeros_like(image)
+        self.cool_rate = 25
+        self.threshold = 0
+
+    def addheat(self, boxlist):
+        # heat up (brighten) areas that have bounding boxes 
+        for idx in range(len(boxlist.list)):
+            x1 = boxlist.list[idx][0]
+            y1 = boxlist.list[idx][1]
+            x2 = boxlist.list[idx][2]
+            y2 = boxlist.list[idx][3]
+            for x in range(x1, x2):
+                for y in range(y1, y2):
+                    if self.img[y, x, 0] < 245:
+                        self.img[y, x, 0] += 10
+                    
+    def cool(self):
+        # cool down areas after each frame to remove false positives
+        self.img[self.img < self.cool_rate] = 0
+        self.img[self.img >= self.cool_rate] -= self.cool_rate
+
+    def thresh(self):
+        # throw out areas that aren't hot (bright) enough
+        img = self.img
+        img[img <= self.threshold] = 0
+
+        return img
+
+    def reset(self):
+        self.img = 0
+```
