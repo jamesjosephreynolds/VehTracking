@@ -247,6 +247,26 @@ The [heatmap_video_out.mp4 video](output_images/heatmap_video_out.mp4) below sho
 
 [![Whoops, there should be a picture here!](https://img.youtube.com/vi/AdDrUNGaqvE/0.jpg)](https://youtu.be/AdDrUNGaqvE)
 
+## Final Identification ##
+Even following the heat mapping and thresholding, my final video still had some very small blips visible.  To overcome these, I put a sort-of dimensionality check on the final bounding regions.  If there are very small hotspots, they are not vehicles.
+
+```python
+labels = label(image_thresh)
+
+for box_label in range(labels[1]):
+    pixels = (labels[0] == (box_label+1)).nonzero()
+    x1 = np.min(np.array(pixels[1]))
+    x2 = np.max(np.array(pixels[1]))
+    y1 = np.min(np.array(pixels[0]))
+    y2 = np.max(np.array(pixels[0]))
+    
+    # filter out very small bounding regions
+    if (y2-y1) > 50 and (x2-x1)> 50:
+        cv2.rectangle(image, (x1, y1), (x2, y2), (255,255,0), 6)
+```
+
+With this in place, my result is the [project_video_out.mp4 video](project_video_out.mp4) here.  One issue that I was not able to resolve is that the white car is seemingly lost as it traverses the bright colored pavement.  This may be due to insufficient training data for the classifier.
+
 ## Reflections ##
 The single biggest shortcoming with this pipeline, in my opinion, is the speed.  It takes approximately 50 minutes to process a 50 second video, so it needs to be 60 to 100 times faster.  I didn't extract all HOG data upfront, as this suggestion was posted to the lesson after my code design was underway, and it was not well structured to handle this change.  It would be an extensive tear-up to make the code compatible with this approach.
 
