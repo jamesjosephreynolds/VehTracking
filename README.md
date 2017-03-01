@@ -237,7 +237,11 @@ class HeatMap():
     def reset(self):
         self.img = 0
 ```
-The video below shows how my heat mapping algorithm performs on the project video.  It's clear that there a few false positives but that, in general, the performance is good.  A simple thresholding, in conjuction with the `cool()` method above, is able to resolve the false positives.
+The video below shows how my heat mapping algorithm performs on the project video.  It's clear that there a few false positives but that, in general, the performance is good.  A simple thresholding, in conjuction with the `cool()` method above, is able to resolve the false positives.  So, there are two key parameters that need to be tuned in order to implement robust heat mapping.
+
+1. cool_rate - how much heat is removed after each frame
+
+2. threshold - the amount of accumulated heat necessary to positively identify a region as a vehicle
 
 [![Whoops, there should be a picture here!](https://img.youtube.com/vi/AdDrUNGaqvE/0.jpg)](https://youtu.be/AdDrUNGaqvE)
 
