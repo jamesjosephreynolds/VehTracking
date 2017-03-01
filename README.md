@@ -1,6 +1,13 @@
 # Vehicle Detection and Tracking #
 The objective of this project is to develop a pipeline that takes a picture of a roadway and identifies the vehicles that are present therein.  In order to reduce the occurrence rate of false positives, information is kept between sequential images.  Single identifications are probably going to be false positives, as vehicles do not appear and disappear within a single frame of video.
 
+### A Note About Setup ###
+In order to run this pipeline, one must either have 
+1. A set of subdirectories: '/vehicles' and 'non-vehicles' with 64x64 pixel color PNG images on which to train
+2. Saved numpy data: X_train.npy, X_test.npy, y_train.npy, y_test.npy
+
+The variable `load_data = True` will take option 2, otherwise option 1 is taken.  Neither of these is small enough to upload to this repository.  For myself, I used the [Vehicle Data](https://s3.amazonaws.com/udacity-sdc/Vehicle_Tracking/vehicles.zip) and [Non-Vehicle Data](https://s3.amazonaws.com/udacity-sdc/Vehicle_Tracking/non-vehicles.zip) links provided by Udacity.
+
 ## Feature Creation ##
 Using the provided image set, there are 8792 images of vehicles (label = 1), and 8968 images of non-vehicles (label = 0).
 
