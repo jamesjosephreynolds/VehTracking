@@ -18,6 +18,10 @@ In order to create a feature array for each image, I augmented data arrays of th
 The code below shows how feature extraction is done for a 64x64x3 image.
 
 ```python
+#---------------------------------#
+### Get feature vector function ###
+#---------------------------------#
+
 def get_feature(img, spatial_size = (32, 32), hist_width = 4, n_bins = 32, orient = 12, pix = 8, cells = 2):
     # take in an RGB image
     # extract color histograms
@@ -55,7 +59,7 @@ def get_feature(img, spatial_size = (32, 32), hist_width = 4, n_bins = 32, orien
     spatial_s = np.array(small_s.ravel(),dtype = np.float)
     spatial_s *= feat_max / 255.0
 
-    # normalize data to [-0.5, 0.5]
+    # concatenate and normalize data
     feature = np.concatenate((hog_array, rhist[0], ghist[0], bhist[0], shist[0], spatial_rgb, spatial_s))/feat_max
     feature = feature.astype(np.float)-0.5
 
@@ -183,11 +187,11 @@ class BBox():
         self.start = self.origin
 ```
 
-Then I created a list of `BBox()` instances that I could use to iterate over a single frame.  For all bounding boxes, I began searching at y-coordinate 350.  There will not be any vehicles above this point, as it corresponds to the sky in the images.  For the smallest bounding box, I stopped the search at y-coordinate 550.  Vehicles that are below that coordinate will be close to the camera, and appear much larger than 96x96 pixels.
+Then I created a list of `BBox()` instances that I could use to iterate over a single frame.  For all bounding boxes, I began searching at y-coordinate 350.  There will not be any vehicles above this point, as it corresponds to the sky in the images.  For the smallest bounding box, I stopped the search at y-coordinate 550.  Vehicles that are below that coordinate will be close to the camera, and appear much larger than 96x96 pixels.  For the larger images, I stopped the search at y-coordinate 680 (near the hood).
 
 ```python
-box1 = BBox(size = (196,196), stride = (32, 32), origin = (0,350), stop = 720)
-box2 = BBox(size = (128,128), stride = (24, 24), origin = (0,350), stop = 720)
+box1 = BBox(size = (196,196), stride = (32, 32), origin = (0,350), stop = 680)
+box2 = BBox(size = (128,128), stride = (24, 24), origin = (0,350), stop = 680)
 box3 = BBox(size = (96,96), stride = (16, 16), origin = (0,350), stop = 550)
 
 boxes = [box1, box2, box3]
@@ -246,6 +250,26 @@ A simple thresholding, in conjuction with the `cool()` method above, is able to 
 The [heatmap_video_out.mp4 video](output_images/heatmap_video_out.mp4) below shows how my heat mapping algorithm performs on the project video, with `threshold = 0`.  It's clear that there a few false positives but that, in general, the performance is good.  A final `threshold = 30` was used for the final solution.
 
 [![Whoops, there should be a picture here!](https://img.youtube.com/vi/AdDrUNGaqvE/0.jpg)](https://youtu.be/AdDrUNGaqvE)
+
+## Final Identification ##
+Even following the heat mapping and thresholding, my final video still had some very small blips visible.  To overcome these, I put a sort-of dimensionality check on the final bounding regions.  If there are very small hotspots, they are not vehicles.
+
+```python
+labels = label(image_thresh)
+
+for box_label in range(labels[1]):
+    pixels = (labels[0] == (box_label+1)).nonzero()
+    x1 = np.min(np.array(pixels[1]))
+    x2 = np.max(np.array(pixels[1]))
+    y1 = np.min(np.array(pixels[0]))
+    y2 = np.max(np.array(pixels[0]))
+    
+    # filter out very small bounding regions
+    if (y2-y1) > 50 and (x2-x1)> 50:
+        cv2.rectangle(image, (x1, y1), (x2, y2), (255,255,0), 6)
+```
+
+With this in place, my result is the [project_video_out.mp4 video](project_video_out.mp4) here.  One issue that I was not able to resolve is that the white car is seemingly lost as it traverses the bright colored pavement.  This may be due to insufficient training data for the classifier.
 
 ## Reflections ##
 The single biggest shortcoming with this pipeline, in my opinion, is the speed.  It takes approximately 50 minutes to process a 50 second video, so it needs to be 60 to 100 times faster.  I didn't extract all HOG data upfront, as this suggestion was posted to the lesson after my code design was underway, and it was not well structured to handle this change.  It would be an extensive tear-up to make the code compatible with this approach.
