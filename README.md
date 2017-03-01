@@ -223,6 +223,7 @@ class HeatMap():
     def reset(self):
         self.img = 0
 ```
+The video below shows how my heat mapping algorithm works for a short clip from the project video (18 to 20 sec).
 
 [![Whoops, there should be a picture here!](https://img.youtube.com/vi/AdDrUNGaqvE/0.jpg)](https://youtu.be/AdDrUNGaqvE)
 
