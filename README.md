@@ -1,10 +1,21 @@
 # Vehicle Detection and Tracking #
-The objective of this project is to develop a pipeline that takes a picture of a roadway and identifies the vehicles that are present therein.  In order to reduce the occurrence rate of false positives, information is kept between sequential images.  Single identifications are probably going to be false positives, as vehicles do not appear and disappear within a single frame of video.
+The objective of this project is to develop a pipeline that takes a picture of a roadway and identifies the vehicles that are present therein.  In order to reduce the occurrence rate of false positives, information is kept between sequential images.  Single identifications are generally false positives, as vehicles do not appear and disappear within a single frame of video.
+
+### A Note About Setup ###
+In order to run this pipeline, one must either have 
+
+1. A set of subdirectories: '/vehicles' and '/non-vehicles' with 64x64 pixel color PNG images on which to train
+
+2. Saved numpy data: X_train.npy, X_test.npy, y_train.npy, y_test.npy
+
+If `load_data = True` the pipeline will take option 2, and load the numpy data.  If `load_data == False` the pipeline will take option 1, and save the numpy files to save time later.  Neither of these datasets are small enough to upload to this repository.  For myself, I used the [Vehicle Data](https://s3.amazonaws.com/udacity-sdc/Vehicle_Tracking/vehicles.zip) and [Non-Vehicle Data](https://s3.amazonaws.com/udacity-sdc/Vehicle_Tracking/non-vehicles.zip) links provided by Udacity.
 
 ## Feature Creation ##
 Using the provided image set, there are 8792 images of vehicles (label = 1), and 8968 images of non-vehicles (label = 0).
 
 In order to create a feature array for each image, I augmented data arrays of the following: HOG vector (8x8 pixels, 2x2 cells, 12 orientations), RGB red histogram (32 bins), RGB green histogram (32 bins), RGB blue histogram (32 bins), HLS saturation histogram (32 bins), RGB red spatial data (resized 32x32), RGB green spatial data (resized 32x32), RGB blue spatial data (resized 32x32) and HLS spatial data (resized 32x32).  This results in each 64x64 pixel input image having 6576 features (7\*7\*2\*2\*12+32\*4 + 1024\*4).  I applied manual normalization so that each element is scaled in the range [-0.5,0.5].
+
+The code below shows how feature extraction is done for a 64x64x3 image.
 
 ```python
 def get_feature(img, spatial_size = (32, 32), hist_width = 4, n_bins = 32, orient = 12, pix = 8, cells = 2):
@@ -54,6 +65,9 @@ def get_feature(img, spatial_size = (32, 32), hist_width = 4, n_bins = 32, orien
 The image below shows an example image, its tranformations, and the resulting feature vector.
 
 ![Whoops, where's my image](output_images/DataExample.png)
+
+### HOG Parameter Optimization ###
+In order to tune the `hog()` function parameters, I used a straightforward technique.  I removed all other features, so that only HOG data was used to train the classifier.  I then tuned the parameters in a random-walk type of manual process.  If the test accuracy of the classifier improved, I kept the change, if it worsened, I reversed the change.  I did this for several iterations until there was a diminishing return in terms of test accuracy.
  
 ## Training and Validation ##
 I used a LinearSVM to train my classifier.  The image below shows the test accuracy and training accuracy versus the number of training iterations.  Since overfitting appears to become an issue after around 20 iterations, that is what I chose for my final fit.
@@ -181,7 +195,7 @@ boxes = [box1, box2, box3]
 
 The resulting scan areas can be seen in the video below.  I chose this frame for my test since it has two cars present.
 
-[![Whoops, there should be a picture here!](https://img.youtube.com/vi/fZdrbdSeQmo/0.jpg)](https://youtu.be/fZdrbdSeQmo)
+[![Whoops, there should be a picture here!](https://img.youtube.com/vi/SUZjjl_zIs4/0.jpg)](https://youtu.be/SUZjjl_zIs4)
 
 ## Heat Mapping ##
 In order to identify and track vehicles within the video, I created `class HeatMap()`, which creates a black image, with bright red spots where there are many bounding boxes identified.  The method `def cool(self)` is used to track the hot spots across multiple frames.  This is beneficial for building confidence in areas that are identified in many consecutive frames, and ignoring temporary false positives.
@@ -223,3 +237,17 @@ class HeatMap():
     def reset(self):
         self.img = 0
 ```
+A simple thresholding, in conjuction with the `cool()` method above, is able to resolve the false positives.  So, there are two key parameters that need to be tuned in order to implement robust heat mapping.
+
+1. cool_rate - how much heat is removed after each frame
+
+2. threshold - the amount of accumulated heat necessary to positively identify a region as a vehicle
+
+The video below shows how my heat mapping algorithm performs on the project video, with `threshold = 0`.  It's clear that there a few false positives but that, in general, the performance is good.  A final `threshold = 30` was used for the final solution.
+
+[![Whoops, there should be a picture here!](https://img.youtube.com/vi/AdDrUNGaqvE/0.jpg)](https://youtu.be/AdDrUNGaqvE)
+
+## Reflections ##
+The single biggest shortcoming with this pipeline, in my opinion, is the speed.  It takes approximately 50 minutes to process a 50 second video, so it needs to be 60 to 100 times faster.  I didn't extract all HOG data upfront, as this suggestion was posted to the lesson after my code design was underway, and it was not well structured to handle this change.  It would be an extensive tear-up to make the code compatible with this approach.
+
+In the end it is not clear to me why these methods (HOG, histogram, SVM, etc) were introduced after convolutional neural networks.  My intuition is that using a CNN was the classifier here would give much better results.  Based on experience in other projects, a well-constructed CNN will not identify a blank road or barrier as a vehicle.
