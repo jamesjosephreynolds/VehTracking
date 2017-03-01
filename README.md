@@ -1,5 +1,5 @@
 # Vehicle Detection and Tracking #
-The objective of this project is to develop a pipeline that takes a picture of a roadway and identifies the vehicles that are present therein.  In order to reduce the occurrence rate of false positives, information is kept between sequential images.  Single identifications are probably going to be false positives, as vehicles do not appear and disappear within a single frame of video.
+The objective of this project is to develop a pipeline that takes a picture of a roadway and identifies the vehicles that are present therein.  In order to reduce the occurrence rate of false positives, information is kept between sequential images.  Single identifications are generally false positives, as vehicles do not appear and disappear within a single frame of video.
 
 ### A Note About Setup ###
 In order to run this pipeline, one must either have 
