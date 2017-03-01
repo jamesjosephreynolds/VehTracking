@@ -193,7 +193,7 @@ box3 = BBox(size = (96,96), stride = (16, 16), origin = (0,350), stop = 550)
 boxes = [box1, box2, box3]
 ```
 
-The resulting scan areas can be seen in the video below.  I chose this frame for my test since it has two cars present.
+The resulting scan areas can be seen in the [boxscan.mp4 video](output_images/boxscan.mp4) below.  I chose this frame for my test since it has two cars present.
 
 [![Whoops, there should be a picture here!](https://img.youtube.com/vi/SUZjjl_zIs4/0.jpg)](https://youtu.be/SUZjjl_zIs4)
 
@@ -243,7 +243,7 @@ A simple thresholding, in conjuction with the `cool()` method above, is able to 
 
 2. threshold - the amount of accumulated heat necessary to positively identify a region as a vehicle
 
-The video below shows how my heat mapping algorithm performs on the project video, with `threshold = 0`.  It's clear that there a few false positives but that, in general, the performance is good.  A final `threshold = 30` was used for the final solution.
+The [heatmap_video_out.mp4 video](output_images/heatmap_video_out.mp4) below shows how my heat mapping algorithm performs on the project video, with `threshold = 0`.  It's clear that there a few false positives but that, in general, the performance is good.  A final `threshold = 30` was used for the final solution.
 
 [![Whoops, there should be a picture here!](https://img.youtube.com/vi/AdDrUNGaqvE/0.jpg)](https://youtu.be/AdDrUNGaqvE)
 
