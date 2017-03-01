@@ -275,7 +275,7 @@ for box_label in range(labels[1]):
 
 With this in place, my result is the [project_video_out.mp4 video](project_video_out.mp4) here.  One issue that I was not able to resolve is that the white car is seemingly lost as it traverses the bright colored pavement (around 20sec).  This may be due to insufficient training data for the classifier.  I was unable to detect this area well and still robustly reject false positives.  A better classifier (e.g. CNN) may help with this area.
 
-[![Whoops, there should be a picture here!]()]()
+[![Whoops, there should be a picture here!](https://img.youtube.com/vi/mm-RiGlB-PU/0.jpg)](https://youtu.be/mm-RiGlB-PU)
 *Final output video with vehicles found*
 
 ## Reflections ##
