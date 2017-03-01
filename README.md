@@ -4,9 +4,9 @@ The objective of this project is to develop a pipeline that takes a picture of a
 ### A Note About Setup ###
 In order to run this pipeline, one must either have 
 
-1. A set of subdirectories: '/vehicles' and '/non-vehicles' with 64x64 pixel color PNG images on which to train
+1. A pair of subdirectories ('/vehicles' and '/non-vehicles') containing 64x64 pixel color PNG images on which to train
 
-2. Saved numpy data: X_train.npy, X_test.npy, y_train.npy, y_test.npy
+2. Saved numpy datafiles: X_train.npy, X_test.npy, y_train.npy, y_test.npy
 
 If `load_data = True` the pipeline will take option 2, and load the numpy data.  If `load_data == False` the pipeline will take option 1, and save the numpy files to save time later.  Neither of these datasets are small enough to upload to this repository.  For myself, I used the [Vehicle Data](https://s3.amazonaws.com/udacity-sdc/Vehicle_Tracking/vehicles.zip) and [Non-Vehicle Data](https://s3.amazonaws.com/udacity-sdc/Vehicle_Tracking/non-vehicles.zip) links provided by Udacity.
 
@@ -193,7 +193,7 @@ box3 = BBox(size = (96,96), stride = (16, 16), origin = (0,350), stop = 550)
 boxes = [box1, box2, box3]
 ```
 
-The resulting scan areas can be seen in the video below.  I chose this frame for my test since it has two cars present.
+The resulting scan areas can be seen in the [boxscan.mp4 video](output_images/boxscan.mp4) below.  I chose this frame for my test since it has two cars present.
 
 [![Whoops, there should be a picture here!](https://img.youtube.com/vi/SUZjjl_zIs4/0.jpg)](https://youtu.be/SUZjjl_zIs4)
 
@@ -243,11 +243,15 @@ A simple thresholding, in conjuction with the `cool()` method above, is able to 
 
 2. threshold - the amount of accumulated heat necessary to positively identify a region as a vehicle
 
-The video below shows how my heat mapping algorithm performs on the project video, with `threshold = 0`.  It's clear that there a few false positives but that, in general, the performance is good.  A final `threshold = 30` was used for the final solution.
+The [heatmap_video_out.mp4 video](output_images/heatmap_video_out.mp4) below shows how my heat mapping algorithm performs on the project video, with `threshold = 0`.  It's clear that there a few false positives but that, in general, the performance is good.  A final `threshold = 30` was used for the final solution.
 
 [![Whoops, there should be a picture here!](https://img.youtube.com/vi/AdDrUNGaqvE/0.jpg)](https://youtu.be/AdDrUNGaqvE)
 
 ## Reflections ##
 The single biggest shortcoming with this pipeline, in my opinion, is the speed.  It takes approximately 50 minutes to process a 50 second video, so it needs to be 60 to 100 times faster.  I didn't extract all HOG data upfront, as this suggestion was posted to the lesson after my code design was underway, and it was not well structured to handle this change.  It would be an extensive tear-up to make the code compatible with this approach.
 
+Additional time could be saved by not running `cv2` processing functions on full images.  Even though the box scan only takes place on the lower region of the camera images, many image transformations still run on the complete image.  This could be a simple way to speed up the pipeline.
+
 In the end it is not clear to me why these methods (HOG, histogram, SVM, etc) were introduced after convolutional neural networks.  My intuition is that using a CNN was the classifier here would give much better results.  Based on experience in other projects, a well-constructed CNN will not identify a blank road or barrier as a vehicle.
+
+There are some additional aspects of vehicle tracking that would be interesting to explore.  This pipeline only locates a vehicle in a 2D plane.  What is more interesting to an automated vehicle is the relative position and velocity of these vehicles.  For instance, a vehicle that is approaching in the vehicle's current lane is much more interesting than a vehicle that is leaving and in a different lane.
