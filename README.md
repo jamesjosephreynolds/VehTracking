@@ -4,7 +4,7 @@ The objective of this project is to develop a pipeline that takes a picture of a
 ## Feature Creation ##
 Using the provided image set, there are 8792 images of vehicles (label = 1), and 8968 images of non-vehicles (label = 0).
 
-In order to create a feature array for each image, I augmented data arrays of the following: HOG vector (8x8 pixels, 2x2 cells, 12 orientations), RGB red histogram (32 bins), RGB green histogram (32 bins), RGB blue histogram (32 bins), HLS saturation histogram (32 bins), RGB red spatial data (resized 32x32), RGB green spatial data (resized 32x32), RGB blue spatial data (resized 32x32) and HLS spatial data (resized 32x32).  This results in each 64x64 pixel input image having 6576 features (7\*7\*2\*2\*12+32\*4 + 1024\*4).  I applied manual normalization so that each element is scaled in the range [0,255].
+In order to create a feature array for each image, I augmented data arrays of the following: HOG vector (8x8 pixels, 2x2 cells, 12 orientations), RGB red histogram (32 bins), RGB green histogram (32 bins), RGB blue histogram (32 bins), HLS saturation histogram (32 bins), RGB red spatial data (resized 32x32), RGB green spatial data (resized 32x32), RGB blue spatial data (resized 32x32) and HLS spatial data (resized 32x32).  This results in each 64x64 pixel input image having 6576 features (7\*7\*2\*2\*12+32\*4 + 1024\*4).  I applied manual normalization so that each element is scaled in the range [-0.5,0.5].
 
 ```python
 def get_feature(img, spatial_size = (32, 32), hist_width = 4, n_bins = 32, orient = 12, pix = 8, cells = 2):
@@ -56,13 +56,13 @@ The image below shows an example image, its tranformations, and the resulting fe
 ![Whoops, where's my image](output_images/DataExample.png)
  
 ## Training and Validation ##
-I used a LinearSVM to train my classifier.  The image below shows the test accuracy and training accuracy versus the number of training iterations.  Since overfitting appears to become an issue after around 40 iterations, that is what I chose for my final fit.
+I used a LinearSVM to train my classifier.  The image below shows the test accuracy and training accuracy versus the number of training iterations.  Since overfitting appears to become an issue after around 20 iterations, that is what I chose for my final fit.
 
 ![Whoops, where's my image](output_images/TrainingError.png)
 
-Initially I used train_test_split() to create my training and validation datasets.  This resulted in very high training and validation accuracies, but very poor performance on test images.  This implied the model was overfit.  Reviewing comments from the Confluence message boards, there is a very good point raised on this topic.  Essentially, train_test_split() integrates a shuffling step of the data.  Since the data is a set of images that are temporaly very similar, shuffling these images puts nearly identical samples in the training and validation sets.  This results in extreme overfitting.
+I made two errors when it came to creating training and validation datasets.  Initially I used train_test_split() to create my training and validation datasets.  This resulted in very high training and validation accuracies, but very poor performance on test images.  This implied the model was overfit.  Reviewing comments from the Confluence message boards, there is a very good point raised on this topic.  Essentially, train_test_split() integrates a shuffling step of the data.  Since the data is a set of images that are temporally very similar, shuffling these images puts nearly identical samples in the training and validation sets.  This results in extreme overfitting.
 
-So, to overcome this issue, I implemented a blunt training/validation data split: keep the images in order and just take the last 20% for my test data.  This was a very effective suggestion by both [Mikel](https://carnd-forums.udacity.com/questions/users?username=anokas) and [Gilad](https://carnd-forums.udacity.com/questions/users?username=giladgressel).  In this way, very similar images are kept together as either training or testing information, but don't cross over.
+So, to overcome this issue, I implemented a blunt training/validation data split: keep the images in order and just take the last 20% for my test data.  This was a very effective suggestion by both [Mikel](https://carnd-forums.udacity.com/questions/users?username=anokas) and [Gilad](https://carnd-forums.udacity.com/questions/users?username=giladgressel).  In this way, very similar images are kept together as either training or testing information, but don't cross over.  However, my first implementation of this split resulted in 100% of the validation data being "non-vehicle".  Below is my original implementation, second implementation, and final implementation.
 
 ```python
 # Original data split technique
@@ -71,11 +71,42 @@ X_train, X_test, y_train, y_test = train_test_split(features,
                                                     test_size = 0.2,
                                                     random_state = 0)
 
-# Corrected data split technique
+# Second data split technique (validation data biased to non-vehicle)
 X_train = features[0:14208]
 X_test = features[14208:17760]
 y_train = labels[0:14208]
 y_test = labels[14208:17760]
+
+# Final data split technique (training and validation sets evenly biased)
+# create an array of feature filenames
+X_train_veh_filenames = vehlist[0:int(num_veh_imgs*0.8)]
+X_test_veh_filenames = vehlist[int(num_veh_imgs*0.8):num_veh_imgs]
+X_train_nveh_filenames = nvehlist[0:int(num_nveh_imgs*0.8)]
+X_test_nveh_filenames = nvehlist[int(num_nveh_imgs*0.8):num_nveh_imgs]
+X_train_filenames = X_train_veh_filenames + X_train_nveh_filenames
+X_test_filenames = X_test_veh_filenames + X_test_nveh_filenames
+
+# create an array of labels
+y_train = np.append(np.ones((len(train_veh_filenames),1),dtype = np.uint8),
+                   np.zeros((len(train_nveh_filenames),1), dtype = np.uint8))
+y_test = np.append(np.ones((len(test_veh_filenames),1),dtype = np.uint8),
+                   np.zeros((len(test_nveh_filenames),1), dtype = np.uint8))
+                   
+X_train = np.zeros((num_train,feat_L), dtype = np.float)
+X_test = np.zeros((num_test,feat_L), dtype = np.float)
+for idx in range(num_train):
+    fname = X_train_filenames[idx]
+    img = get_image(fname)
+    feat = get_feature(img)
+    assert len(feat) == feat_L, 'length of feature is wrong!'
+    X_train[idx] = feat
+
+for idx in range(num_test):
+    fname = X_test_filenames[idx]
+    img = get_image(fname)
+    feat = get_feature(img)
+    assert len(feat) == feat_L, 'length of feature is wrong!'
+    X_test[idx] = feat
 ```
 
 ## Scanning a Single Frame ##
