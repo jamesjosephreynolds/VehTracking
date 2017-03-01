@@ -44,9 +44,9 @@ def get_feature(img, spatial_size = (32, 32), hist_width = 4, n_bins = 32, orien
     spatial_s = np.array(small_s.ravel(),dtype = np.float)
     spatial_s *= feat_max / 255.0
 
-
-    feature = 255*np.concatenate((hog_array, rhist[0], ghist[0], bhist[0], shist[0], spatial_rgb, spatial_s))/feat_max
-    feature = feature.astype(np.uint8)
+    # normalize data to [-0.5, 0.5]
+    feature = np.concatenate((hog_array, rhist[0], ghist[0], bhist[0], shist[0], spatial_rgb, spatial_s))/feat_max
+    feature = feature.astype(np.float)-0.5
 
     return feature
  ```
