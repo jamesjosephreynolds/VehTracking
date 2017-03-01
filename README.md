@@ -69,6 +69,7 @@ def get_feature(img, spatial_size = (32, 32), hist_width = 4, n_bins = 32, orien
 The image below shows an example image, its tranformations, and the resulting feature vector.
 
 ![Whoops, where's my image](output_images/DataExample.png)
+*Example image data features*
 
 ### HOG Parameter Optimization ###
 In order to tune the `hog()` function parameters, I used a straightforward technique.  I removed all other features, so that only HOG data was used to train the classifier.  I then tuned the parameters in a random-walk type of manual process.  If the test accuracy of the classifier improved, I kept the change, if it worsened, I reversed the change.  I did this for several iterations until there was a diminishing return in terms of test accuracy.
@@ -77,6 +78,7 @@ In order to tune the `hog()` function parameters, I used a straightforward techn
 I used a LinearSVM to train my classifier.  The image below shows the test accuracy and training accuracy versus the number of training iterations.  Since overfitting appears to become an issue after around 20 iterations, that is what I chose for my final fit.
 
 ![Whoops, where's my image](output_images/TrainingError.png)
+*Training and validation error versus number of iterations*
 
 I made two errors when it came to creating training and validation datasets.  Initially I used train_test_split() to create my training and validation datasets.  This resulted in very high training and validation accuracies, but very poor performance on test images.  This implied the model was overfit.  Reviewing comments from the Confluence message boards, there is a very good point raised on this topic.  Essentially, train_test_split() integrates a shuffling step of the data.  Since the data is a set of images that are temporally very similar, shuffling these images puts nearly identical samples in the training and validation sets.  This results in extreme overfitting.
 
@@ -200,6 +202,7 @@ boxes = [box1, box2, box3]
 The resulting scan areas can be seen in the [boxscan.mp4 video](output_images/boxscan.mp4) below.  I chose this frame for my test since it has two cars present.
 
 [![Whoops, there should be a picture here!](https://img.youtube.com/vi/SUZjjl_zIs4/0.jpg)](https://youtu.be/SUZjjl_zIs4)
+*Scanning a single frame for vehicles*
 
 ## Heat Mapping ##
 In order to identify and track vehicles within the video, I created `class HeatMap()`, which creates a black image, with bright red spots where there are many bounding boxes identified.  The method `def cool(self)` is used to track the hot spots across multiple frames.  This is beneficial for building confidence in areas that are identified in many consecutive frames, and ignoring temporary false positives.
@@ -250,6 +253,7 @@ A simple thresholding, in conjuction with the `cool()` method above, is able to 
 The [heatmap_video_out.mp4 video](output_images/heatmap_video_out.mp4) below shows how my heat mapping algorithm performs on the project video, with `threshold = 0`.  It's clear that there a few false positives but that, in general, the performance is good.  A final `threshold = 30` was used for the final solution.
 
 [![Whoops, there should be a picture here!](https://img.youtube.com/vi/AdDrUNGaqvE/0.jpg)](https://youtu.be/AdDrUNGaqvE)
+*Heat map results over project video*
 
 ## Final Identification ##
 Even following the heat mapping and thresholding, my final video still had some very small blips visible.  To overcome these, I put a sort-of dimensionality check on the final bounding regions.  If there are very small hotspots, they are not vehicles.
@@ -270,6 +274,9 @@ for box_label in range(labels[1]):
 ```
 
 With this in place, my result is the [project_video_out.mp4 video](project_video_out.mp4) here.  One issue that I was not able to resolve is that the white car is seemingly lost as it traverses the bright colored pavement.  This may be due to insufficient training data for the classifier.
+
+[![Whoops, there should be a picture here!]()]()
+*Final output video with vehicles found*
 
 ## Reflections ##
 The single biggest shortcoming with this pipeline, in my opinion, is the speed.  It takes approximately 50 minutes to process a 50 second video, so it needs to be 60 to 100 times faster.  I didn't extract all HOG data upfront, as this suggestion was posted to the lesson after my code design was underway, and it was not well structured to handle this change.  It would be an extensive tear-up to make the code compatible with this approach.
