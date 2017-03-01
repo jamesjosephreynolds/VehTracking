@@ -6,6 +6,8 @@ Using the provided image set, there are 8792 images of vehicles (label = 1), and
 
 In order to create a feature array for each image, I augmented data arrays of the following: HOG vector (8x8 pixels, 2x2 cells, 12 orientations), RGB red histogram (32 bins), RGB green histogram (32 bins), RGB blue histogram (32 bins), HLS saturation histogram (32 bins), RGB red spatial data (resized 32x32), RGB green spatial data (resized 32x32), RGB blue spatial data (resized 32x32) and HLS spatial data (resized 32x32).  This results in each 64x64 pixel input image having 6576 features (7\*7\*2\*2\*12+32\*4 + 1024\*4).  I applied manual normalization so that each element is scaled in the range [-0.5,0.5].
 
+The code below shows how feature extraction is done for a 64x64x3 image.
+
 ```python
 def get_feature(img, spatial_size = (32, 32), hist_width = 4, n_bins = 32, orient = 12, pix = 8, cells = 2):
     # take in an RGB image
@@ -54,6 +56,9 @@ def get_feature(img, spatial_size = (32, 32), hist_width = 4, n_bins = 32, orien
 The image below shows an example image, its tranformations, and the resulting feature vector.
 
 ![Whoops, where's my image](output_images/DataExample.png)
+
+### HOG Parameter Optimization ###
+In order to tune the `hog()` function parameters, I used a straightforward technique.  I removed all other features, so that only HOG data was used to train the classifier.  I then tuned the parameters in a random-walk type of manual process.  If the test accuracy of the classifier improved, I kept the change, if it worsened, I reversed the change.  I did this for several iterations until there was a diminishing return in terms of test accuracy.
  
 ## Training and Validation ##
 I used a LinearSVM to train my classifier.  The image below shows the test accuracy and training accuracy versus the number of training iterations.  Since overfitting appears to become an issue after around 20 iterations, that is what I chose for my final fit.
@@ -223,7 +228,7 @@ class HeatMap():
     def reset(self):
         self.img = 0
 ```
-The video below shows how my heat mapping algorithm works for a short clip from the project video (18 to 20 sec).
+The video below shows how my heat mapping algorithm performs on the project video.  It's clear that there a few false positives but that, in general, the performance is good.  A simple thresholding, in conjuction with the `cool()` method above, is able to resolve the false positives.
 
 [![Whoops, there should be a picture here!](https://img.youtube.com/vi/AdDrUNGaqvE/0.jpg)](https://youtu.be/AdDrUNGaqvE)
 
