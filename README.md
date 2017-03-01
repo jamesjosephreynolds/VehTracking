@@ -4,7 +4,7 @@ The objective of this project is to develop a pipeline that takes a picture of a
 ### A Note About Setup ###
 In order to run this pipeline, one must either have 
 
-1. A set of subdirectories: '/vehicles' and 'non-vehicles' with 64x64 pixel color PNG images on which to train
+1. A set of subdirectories: '/vehicles' and '/non-vehicles' with 64x64 pixel color PNG images on which to train
 
 2. Saved numpy data: X_train.npy, X_test.npy, y_train.npy, y_test.npy
 
