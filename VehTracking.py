@@ -19,9 +19,9 @@ from moviepy.editor import ImageClip
 from moviepy.editor import VideoClip
 from scipy.ndimage.measurements import label
 
-#--------------#
-### Clean up ###
-#--------------#
+#------------------------#
+### Clean up Mac files ###
+#------------------------#
 try:
     os.remove('tmp_images/.DS_Store')
 except:
@@ -68,7 +68,7 @@ def get_feature(img, spatial_size = (32, 32), hist_width = 4, n_bins = 32, orien
     spatial_s = np.array(small_s.ravel(),dtype = np.float)
     spatial_s *= feat_max / 255.0
 
-
+    # concatenate and normalize data
     feature = np.concatenate((hog_array, rhist[0], ghist[0], bhist[0], shist[0], spatial_rgb, spatial_s))/feat_max
     feature = feature.astype(np.float)-0.5
 
@@ -263,30 +263,43 @@ def check_box(img, box):
     return small_img
 
 def make_output_image(image):
-    
+    # process an image file
+    # extract feature data for scanned regions
+    # create heatmap
+    # add bounding boxes to original image
+
+    # need a copy so draw_box() doesn't mark up original
     img_copy = np.copy(image)
 
+    # define bounding boxes with which to scan
     box1 = BBox(size = (196,196), stride = (32, 32), origin = (0,350), stop = 680)
     box2 = BBox(size = (128,128), stride = (24, 24), origin = (0,350), stop = 680)
     box3 = BBox(size = (96,96), stride = (16, 16), origin = (0,350), stop = 550)
-
     boxes = [box1, box2, box3]
     boxlist = BoxList()
+
+    # cool the previous iteration of the heat map before updating
     heatmap.cool()
 
+    # find bounding boxes
     for box in boxes:
         while box.out_of_bounds == 0:
             _ = draw_box(img_copy, box, boxlist)
 
+    # add heat where bounding boxes are identified
     heatmap.addheat(boxlist)
+    # filter out low heat regions
     image_thresh = heatmap.thresh()
+    # label the individual areas
     labels = label(image_thresh)
+    # create bounding boxes if size is adequate
     for box_label in range(labels[1]):
         pixels = (labels[0] == (box_label+1)).nonzero()
         x1 = np.min(np.array(pixels[1]))
         x2 = np.max(np.array(pixels[1]))
         y1 = np.min(np.array(pixels[0]))
         y2 = np.max(np.array(pixels[0]))
+        # filter out very small bounding regions
         if (y2-y1) > 50 and (x2-x1)> 50:
             cv2.rectangle(image, (x1, y1), (x2, y2), (255,255,0), 6)
 
@@ -323,7 +336,10 @@ for path in nvehpathlist:
 
 num_veh_imgs = len(vehlist)
 num_nveh_imgs = len(nvehlist)
-num_imgs = num_veh_imgs + num_nveh_imgs
+
+#---------------------------------------------#
+### Split the data into train and test sets ###
+#---------------------------------------------#
 
 # create an array of feature filenames
 feature_filenames = vehlist+nvehlist
@@ -417,9 +433,9 @@ plt.tight_layout()
 plt.savefig('output_images/DataExample.png',format='png')
 plt.close()
 
-#----------------------------#
-### Create features vector ###
-#----------------------------#
+#-------------------------------#
+### Save/Load features vector ###
+#-------------------------------#
 load_data = True
 
 if load_data is False:
@@ -454,9 +470,9 @@ else:
     print('Load X_test.npy numpy data')
     X_test = np.load('X_test.npy')
 
-#--------------------------#
-### Create labels vector ###
-#--------------------------#
+#-----------------------------#
+### Save/Load labels vector ###
+#-----------------------------#
 
 if load_data is False:
     print('Save y_train.npy numpy data')
@@ -470,9 +486,7 @@ else:
     print('Load y_test.npy numpy data')
     y_test = np.load('y_test.npy')
 
-#-------------------------------------------------------#
-### Split the data into test/validation set and train ###
-#-------------------------------------------------------#
+
 Xtype = str(type(X_train))
 Xshape = str(X_train.shape)
 print('X_train is a '+Xtype+' of shape '+Xshape)
@@ -486,13 +500,21 @@ ytype = str(type(y_test))
 yshape = str(y_test.shape)
 print('y_test is a '+ytype+' of shape '+yshape)
 
-# Use a linear SVC (support vector classifier)
+#--------------------------------------------------#
+### Use a linear SVC (support vector classifier) ###
+#--------------------------------------------------#
 iterations = 20
 iter_step = 5
+
+# define the SVC
 svc = svm.LinearSVC(max_iter = iterations, random_state = 0)
+
 # Train the SVC
 train_error_verbose = False
+
 if train_error_verbose is True:
+    # if verbose, create a plot showing the progression of accuracy
+    # versus number of iterations
     train_error = np.zeros((int(iterations/iter_step),2), dtype = np.float)
     train_xaxis = np.arange(iter_step,iterations+iter_step,iter_step)
     for epoch in range(int(iterations/iter_step)):
@@ -510,21 +532,23 @@ if train_error_verbose is True:
     plt.close()
 
 else:
+    # it not verbose, just train for the specified number of iterations
     svc.fit(X_train, y_train)
     train_error = svc.score(X_test, y_test)
     print('Run '+str(1)+': '+str(iterations)+' iterations: '+str(train_error))
 
-#----------------------#
-### Get a test image ###
-#----------------------#
+#------------------------------------------#
+### Apply bounding boxes to a test image ###
+#------------------------------------------#
 
+# get image from project video
 clip = VideoFileClip("project_video.mp4")
 test_image = clip.get_frame(t=38)
 
+# define scanning regions
 box1 = BBox(size = (196,196), stride = (32, 32), origin = (0,350), stop = 680)
 box2 = BBox(size = (128,128), stride = (24, 24), origin = (0,350), stop = 680)
 box3 = BBox(size = (96,96), stride = (16, 16), origin = (0,350), stop = 550)
-
 boxes = [box1, box2, box3]
 boxlist = BoxList()
 
@@ -532,10 +556,13 @@ img = test_image
 
 make_scan_video = False
 if make_scan_video is True:
+    # if true, output a video showing the progress of the image scan
     idx = 0
     fname = 'tmp_images/tmp_image_'+str(idx).zfill(4)+'.jpg'
     img = cv2.cvtColor(test_image, cv2.COLOR_RGB2BGR)
     cv2.imwrite(fname, img)
+
+    # create a set of images in a temporary folder to of box scan
     for box in boxes:
         while box.out_of_bounds == 0:
             idx += 1
@@ -547,15 +574,18 @@ if make_scan_video is True:
     
         box.reset()
 
+    # write video file
     clip = ImageSequenceClip("tmp_images", fps = 40)
     clip.write_videofile("boxscan.mp4")
 
+#-----------------------------#
+### Make Final Output Video ###
+#-----------------------------#
 make_output_video = True
 if make_output_video is True:
     heatmap = HeatMap(image = test_image)
     video_output = 'project_video_out.mp4'
     clip1 = VideoFileClip("project_video.mp4")
-    #clip1 = clip1.subclip(33,35)
     video_clip = clip1.fl_image(make_output_image)
     video_clip.write_videofile(video_output, audio=False)
 
