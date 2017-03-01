@@ -203,6 +203,8 @@ class HeatMap():
             y2 = boxlist.list[idx][3]
             for x in range(x1, x2):
                 for y in range(y1, y2):
+                    # don't allow overflow or bright areas turn
+                    # black inadvertently
                     if self.img[y, x, 0] < 245:
                         self.img[y, x, 0] += 10
                     
