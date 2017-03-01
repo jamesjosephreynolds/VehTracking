@@ -262,7 +262,7 @@ def check_box(img, box):
 
     return small_img
 
-def make_heat_map_image(image):
+def make_output_image(image):
     
     img_copy = np.copy(image)
 
@@ -287,7 +287,8 @@ def make_heat_map_image(image):
         x2 = np.max(np.array(pixels[1]))
         y1 = np.min(np.array(pixels[0]))
         y2 = np.max(np.array(pixels[0]))
-        cv2.rectangle(image, (x1, y1), (x2, y2), (255,255,0), 6)
+        if (y2-y1) > 50 and (x2-x1)> 50:
+            cv2.rectangle(image, (x1, y1), (x2, y2), (255,255,0), 6)
 
     return image
 
@@ -549,30 +550,13 @@ if make_scan_video is True:
     clip = ImageSequenceClip("tmp_images", fps = 40)
     clip.write_videofile("boxscan.mp4")
 
-make_crop_video = False
-if make_crop_video is True:
-    idx = 0
-    for box in boxes:
-        while box.out_of_bounds == 0:
-            idx += 1
-            fname = 'tmp_images/tmp_image_'+str(idx).zfill(4)+'.jpg'
-            img = check_box(test_image, box)
-            if box.out_of_bounds == 0:
-                img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-                cv2.imwrite(fname, img)
-    
-        box.reset()
-
-    clip = ImageSequenceClip("tmp_images", fps = 40)
-    clip.write_videofile("scanarea.mp4")
-
-make_heat_video = True
-if make_heat_video is True:
+make_output_video = True
+if make_output_video is True:
     heatmap = HeatMap(image = test_image)
-    video_output = 'heatmap_video_out.mp4'
+    video_output = 'project_video_out.mp4'
     clip1 = VideoFileClip("project_video.mp4")
     #clip1 = clip1.subclip(33,35)
-    video_clip = clip1.fl_image(make_heat_map_image)
+    video_clip = clip1.fl_image(make_output_image)
     video_clip.write_videofile(video_output, audio=False)
 
 
