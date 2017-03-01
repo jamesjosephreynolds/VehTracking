@@ -17,6 +17,7 @@ from moviepy.editor import VideoFileClip
 from moviepy.editor import ImageSequenceClip
 from moviepy.editor import ImageClip
 from moviepy.editor import VideoClip
+from scipy.ndimage.measurements import label
 
 #--------------#
 ### Clean up ###
@@ -30,9 +31,7 @@ except:
 ### Get feature vector function ###
 #---------------------------------#
 
-#def get_feature(img, spatial_size = (16, 16), n_bins = 32, orient = 8, pix = 8, cells = 2):
-#def get_feature(img, hist_width = 4, n_bins = 32, orient = 8, pix = 4, cells = 2):
-def get_feature(img, spatial_size = (32, 32), hist_width = 4, n_bins = 32, orient = 12, pix = 8, cells = 2):#pix 8
+def get_feature(img, spatial_size = (32, 32), hist_width = 4, n_bins = 32, orient = 12, pix = 8, cells = 2):
     # take in an RGB image
     # extract color histograms
     # extract spatial color data
@@ -43,10 +42,6 @@ def get_feature(img, spatial_size = (32, 32), hist_width = 4, n_bins = 32, orien
     height = img.shape[0]
 
     # feature maximum value for normalizing
-    '''
-    feat_max = np.float32(height*hist_width)
-    '''
-    ### THIS HAS AN UNEXPECTED EFFECT VERSUS ^^^
     feat_max = np.float32(img.shape[0]*img.shape[1])
 
     # hog data
@@ -57,34 +52,6 @@ def get_feature(img, spatial_size = (32, 32), hist_width = 4, n_bins = 32, orien
 
     # color histograms
     img_hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
-
-    '''
-
-    for idx in range(hist_width):
-        xstart = idx*hist_width
-        xstop = xstart + hist_width
-        if idx == 0:
-            strip = img[0:height,xstart:xstop]
-            rhist = np.histogram(strip[:,:,0], bins=n_bins, range=(0, 256))[0]
-            ghist = np.histogram(strip[:,:,1], bins=n_bins, range=(0, 256))[0]
-            bhist = np.histogram(strip[:,:,2], bins=n_bins, range=(0, 256))[0]
-
-            strip = img_hsv[0:height,xstart:xstop]
-            hhist = np.histogram(strip[:,:,0], bins=n_bins, range=(0, 256))[0]
-            shist = np.histogram(strip[:,:,1], bins=n_bins, range=(0, 256))[0]
-            vhist = np.histogram(strip[:,:,2], bins=n_bins, range=(0, 256))[0]
-            
-        else:
-            strip = img[0:height,xstart:xstop]
-            rhist = np.append(rhist, np.histogram(strip[:,:,0], bins=n_bins, range=(0, 256))[0])
-            ghist = np.append(rhist, np.histogram(strip[:,:,1], bins=n_bins, range=(0, 256))[0])
-            bhist = np.append(rhist, np.histogram(strip[:,:,2], bins=n_bins, range=(0, 256))[0])
-
-            strip = img_hsv[0:height,xstart:xstop]
-            hhist = np.append(rhist, np.histogram(strip[:,:,0], bins=n_bins, range=(0, 256))[0])
-            shist = np.append(rhist, np.histogram(strip[:,:,1], bins=n_bins, range=(0, 256))[0])
-            vhist = np.append(rhist, np.histogram(strip[:,:,2], bins=n_bins, range=(0, 256))[0])
-    '''
 
     # color histograms
     img_S = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)[:,:,1]
@@ -104,11 +71,6 @@ def get_feature(img, spatial_size = (32, 32), hist_width = 4, n_bins = 32, orien
 
     feature = np.concatenate((hog_array, rhist[0], ghist[0], bhist[0], shist[0], spatial_rgb, spatial_s))/feat_max
     feature = feature.astype(np.float)-0.5
-    '''
-    #feature = 255*np.concatenate((hog_array, rhist, ghist, bhist, hhist, shist, vhist))/feat_max
-    feature = 255*np.concatenate((hog_array, rhist, ghist, bhist, hhist, shist, vhist))/feat_max
-    feature = feature.astype(np.uint8)
-    '''
 
     return feature
 
@@ -188,7 +150,7 @@ class HeatMap():
     def __init__(self, image):
         self.img = np.zeros_like(image)
         self.cool_rate = 25
-        self.threshold = 15
+        self.threshold = 30
 
     def addheat(self, boxlist):
         for idx in range(len(boxlist.list)):
@@ -206,10 +168,10 @@ class HeatMap():
         self.img[self.img >= self.cool_rate] -= self.cool_rate
 
     def thresh(self):
-        img = self.img
-        img[img <= self.threshold] = 0
+        img_thresh = self.img
+        img_thresh[img_thresh <= self.threshold] = 0
 
-        return img
+        return img_thresh
 
     def reset(self):
         self.img = 0
@@ -301,6 +263,8 @@ def check_box(img, box):
     return small_img
 
 def make_heat_map_image(image):
+    
+    img_copy = np.copy(image)
 
     box1 = BBox(size = (196,196), stride = (32, 32), origin = (0,350), stop = 680)
     box2 = BBox(size = (128,128), stride = (24, 24), origin = (0,350), stop = 680)
@@ -312,11 +276,20 @@ def make_heat_map_image(image):
 
     for box in boxes:
         while box.out_of_bounds == 0:
-            _ = draw_box(image, box, boxlist)
+            _ = draw_box(img_copy, box, boxlist)
 
     heatmap.addheat(boxlist)
+    image_thresh = heatmap.thresh()
+    labels = label(image_thresh)
+    for box_label in range(labels[1]):
+        pixels = (labels[0] == (box_label+1)).nonzero()
+        x1 = np.min(np.array(pixels[1]))
+        x2 = np.max(np.array(pixels[1]))
+        y1 = np.min(np.array(pixels[0]))
+        y2 = np.max(np.array(pixels[0]))
+        cv2.rectangle(image, (x1, y1), (x2, y2), (255,255,0), 6)
 
-    return heatmap.thresh()
+    return image
 
 #-----------------------------------#
 ### Create feature and label sets ###
@@ -499,17 +472,6 @@ else:
 #-------------------------------------------------------#
 ### Split the data into test/validation set and train ###
 #-------------------------------------------------------#
-'''
-X_train, X_test, y_train, y_test = train_test_split(features,
-                                                    labels,
-                                                    test_size = 0.2,
-                                                    random_state = 0)
-
-X_train = features[0:14208]
-X_test = features[14208:17760]
-y_train = labels[0:14208]
-y_test = labels[14208:17760]'''
-
 Xtype = str(type(X_train))
 Xshape = str(X_train.shape)
 print('X_train is a '+Xtype+' of shape '+Xshape)
@@ -567,7 +529,7 @@ boxlist = BoxList()
 
 img = test_image
 
-make_scan_video = True
+make_scan_video = False
 if make_scan_video is True:
     idx = 0
     fname = 'tmp_images/tmp_image_'+str(idx).zfill(4)+'.jpg'
@@ -609,7 +571,7 @@ if make_heat_video is True:
     heatmap = HeatMap(image = test_image)
     video_output = 'heatmap_video_out.mp4'
     clip1 = VideoFileClip("project_video.mp4")
-    #clip1 = clip1.subclip(18,20)
+    clip1 = clip1.subclip(33,35)
     video_clip = clip1.fl_image(make_heat_map_image)
     video_clip.write_videofile(video_output, audio=False)
 
