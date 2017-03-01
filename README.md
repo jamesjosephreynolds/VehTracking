@@ -283,6 +283,6 @@ The single biggest shortcoming with this pipeline, in my opinion, is the speed. 
 
 Additional time could be saved by not running `cv2` processing functions on full images.  Even though the box scan only takes place on the lower region of the camera images, many image transformations still run on the complete image.  This could be a simple way to speed up the pipeline.
 
-In the end it is not clear to me why these methods (HOG, histogram, SVM, etc) were introduced after convolutional neural networks.  My intuition is that using a CNN was the classifier here would give much better results.  Based on experience in other projects, a well-constructed CNN will not identify a blank road or barrier as a vehicle.
+In the end it is not clear to me why these methods (HOG, histogram, SVM, etc) were introduced after convolutional neural networks.  My intuition is that using a CNN as the classifier here would give much better results.  Based on experience in other projects, a well-constructed CNN will not identify a blank road or barrier as a vehicle.
 
 There are some additional aspects of vehicle tracking that would be interesting to explore.  This pipeline only locates a vehicle in a 2D plane.  What is more interesting to an automated vehicle is the relative position and velocity of these vehicles.  For instance, a vehicle that is approaching in the vehicle's current lane is much more interesting than a vehicle that is leaving and in a different lane.
