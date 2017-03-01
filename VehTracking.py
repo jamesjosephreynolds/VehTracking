@@ -571,7 +571,7 @@ if make_heat_video is True:
     heatmap = HeatMap(image = test_image)
     video_output = 'heatmap_video_out.mp4'
     clip1 = VideoFileClip("project_video.mp4")
-    clip1 = clip1.subclip(33,35)
+    #clip1 = clip1.subclip(33,35)
     video_clip = clip1.fl_image(make_heat_map_image)
     video_clip.write_videofile(video_output, audio=False)
 
