@@ -300,7 +300,7 @@ def make_output_image(image):
         y1 = np.min(np.array(pixels[0]))
         y2 = np.max(np.array(pixels[0]))
         # filter out very small bounding regions
-        if (y2-y1) > 50 and (x2-x1)> 50:
+        if (y2-y1) > 19 and (x2-x1) > 19:
             cv2.rectangle(image, (x1, y1), (x2, y2), (255,255,0), 6)
 
     return image
@@ -588,5 +588,4 @@ if make_output_video is True:
     clip1 = VideoFileClip("project_video.mp4")
     video_clip = clip1.fl_image(make_output_image)
     video_clip.write_videofile(video_output, audio=False)
-
 
